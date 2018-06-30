@@ -1,0 +1,131 @@
+/*Overview*/
+SELECT *
+FROM page_visits
+LIMIT 20;
+
+/*Task 1 - Question 1*/
+SELECT COUNT (DISTINCT utm_campaign) AS 'Count of utm_campaign'
+FROM page_visits;
+
+SELECT COUNT(DISTINCT utm_source) AS 'Count of utm_source'
+FROM page_visits;
+
+SELECT DISTINCT utm_campaign,
+       utm_source
+FROM page_visits;
+
+/*Task 2 - Question 1*/
+SELECT DISTINCT page_name
+FROM page_visits;
+
+/*Task 3 - Question 2*/
+WITH first_touch AS (
+    SELECT user_id, MIN(timestamp) AS 'first_touch_at'
+    FROM page_visits
+    GROUP BY user_id)
+SELECT COUNT(first_touch.user_id),
+       page_visits.utm_campaign
+FROM first_touch
+JOIN page_visits
+    ON first_touch.user_id = page_visits.user_id
+    AND first_touch.first_touch_at = page_visits.timestamp
+GROUP BY utm_campaign;
+/*Task 3 - Question 2 Alt. (using hints)*/
+WITH first_touch AS (
+    SELECT user_id,
+           MIN(timestamp) AS 'first_touch_at'
+    FROM page_visits
+    GROUP BY user_id),
+ft_attr AS(
+    SELECT first_touch.user_id,
+           first_touch.first_touch_at,
+           page_visits.utm_source,
+           page_visits.utm_campaign
+    FROM first_touch
+    JOIN page_visits
+           ON first_touch.user_id = page_visits.user_id
+           AND first_touch.first_touch_at = page_visits.timestamp)
+SELECT ft_attr.utm_source,
+       ft_attr.utm_campaign,
+       COUNT(*)
+FROM ft_attr
+GROUP BY 1, 2
+ORDER BY 3 DESC;
+                      
+/*Task 4 - Question 2*/
+WITH last_touch AS (
+    SELECT user_id, MAX(timestamp) AS 'last_touch_at'
+    FROM page_visits
+    GROUP BY user_id)
+SELECT COUNT(last_touch.user_id),
+       page_visits.utm_campaign
+FROM last_touch
+JOIN page_visits
+    ON last_touch.user_id = page_visits.user_id
+    AND last_touch.last_touch_at = page_visits.timestamp
+GROUP BY utm_campaign;
+/*Task 4 - Question 2 Alt. (using hints)*/
+WITH last_touch AS (
+    SELECT user_id,
+           MAX(timestamp) AS 'last_touch_at'
+    FROM page_visits
+    GROUP BY user_id),
+lt_attr AS(
+    SELECT last_touch.user_id,
+           last_touch.last_touch_at,
+           page_visits.utm_source,
+           page_visits.utm_campaign
+    FROM last_touch
+    JOIN page_visits
+           ON last_touch.user_id = page_visits.user_id
+           AND last_touch.last_touch_at = page_visits.timestamp)
+SELECT lt_attr.utm_source,
+       lt_attr.utm_campaign,
+       COUNT(*)
+FROM lt_attr
+GROUP BY 1, 2
+ORDER BY 3 DESC;
+
+/*Task 5 - Question 2*/
+SELECT page_name,
+       COUNT (DISTINCT user_id) AS 'Unique Users'
+FROM page_visits
+WHERE page_name IS '4 - purchase'
+GROUP BY page_name;
+                                   
+/*Task 6 - Question 2*/
+WITH last_touch AS (
+    SELECT user_id,
+           MAX(timestamp) AS 'last_touch_at'
+    FROM page_visits
+    WHERE page_name = '4 - purchase'
+    GROUP BY user_id)
+SELECT COUNT(last_touch.user_id),
+       page_visits.utm_campaign
+FROM last_touch
+JOIN page_visits
+    ON last_touch.user_id = page_visits.user_id
+    AND last_touch.last_touch_at = page_visits.timestamp
+GROUP BY utm_campaign;
+/*Task 6 - Question 2 Alt. (using hints)*/
+WITH last_touch AS (
+    SELECT user_id,
+           MAX(timestamp) AS 'last_touch_at'
+    FROM page_visits
+    WHERE page_name = '4 - purchase'
+    GROUP BY user_id),
+lt_attr AS(
+    SELECT last_touch.user_id,
+           last_touch.last_touch_at,
+           page_visits.utm_source,
+           page_visits.utm_campaign
+    FROM last_touch
+    JOIN page_visits
+            ON last_touch.user_id = page_visits.user_id
+            AND last_touch.last_touch_at = page_visits.timestamp)
+SELECT lt_attr.utm_source,
+       lt_attr.utm_campaign,
+       COUNT(*)
+FROM lt_attr
+GROUP BY 1, 2
+ORDER BY 3 DESC;
